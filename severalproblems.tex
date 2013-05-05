@@ -1,0 +1,67 @@
+%-----------------------------------------------------------------------------
+%
+%               Template for sigplanconf LaTeX Class
+%
+% Name:         sigplanconf-template.tex
+%
+% Purpose:      A template for sigplanconf.cls, which is a LaTeX 2e class
+%               file for SIGPLAN conference proceedings.
+%
+% Guide:        Refer to "Author's Guide to the ACM SIGPLAN Class,"
+%               sigplanconf-guide.pdf
+%
+% Author:       Paul C. Anagnostopoulos
+%               Windfall Software
+%               978 371-2316
+%               paul@windfall.com
+%
+% Created:      15 February 2005
+%
+%-----------------------------------------------------------------------------
+
+
+\documentclass[preprint,11pt,times]{sigplanconf}
+
+% The following \documentclass options may be useful:
+%
+% 10pt          To set in 10-point type instead of 9-point.
+% 11pt          To set in 11-point type instead of 9-point.
+% authoryear    To obtain author/year citation style instead of numeric.
+
+\usepackage{times}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{outlines}
+
+\definecolor{MyDarkBlue}{rgb}{0,0.08,0.45}
+\usepackage[pdftex]{hyperref}
+\hypersetup{
+    colorlinks,%
+    citecolor=MyDarkBlue,%
+    filecolor=MyDarkBlue,%
+    linkcolor=MyDarkBlue,%
+    urlcolor=MyDarkBlue
+}
+%\usepackage[sort]{cite}
+\usepackage{amsmath}
+
+\newcommand{\eat}[1]{}
+\begin{document}
+
+\title{The Weakest Failure Detectors to Solve Certain Fundamental Problems in Distributed Computing}
+
+\authorinfo{Aurojit Panda}
+           {U.C. Berkeley}
+           {apanda@cs.berkeley.edu}
+\maketitle
+
+\input{introduction}
+% We recommend abbrvnat bibliography style.
+
+\bibliographystyle{abbrvnat}
+
+% The bibliography should be embedded for final submission.
+
+\bibliography{bib}
+
+\end{document}
