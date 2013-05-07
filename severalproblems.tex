@@ -44,8 +44,17 @@
 }
 %\usepackage[sort]{cite}
 \usepackage{amsmath}
+\usepackage{amsfonts}
 
 \newcommand{\eat}[1]{}
+\newcommand{\tbd}[1]{{\bf [[TBD: {#1}]]}}
+\newcommand{\ie}{{\it i.e. }}
+\newcommand{\eg}{{\it e.g. }}
+\newcommand{\cf}{{\it cf. }}
+\newcommand{\etc}{{\it etc. }}
+\newcommand{\viz}{{\it viz. }}
+\newcommand{\apriori}{{\it a priori}}
+\sloppy
 \begin{document}
 
 \title{The Weakest Failure Detectors to Solve Certain Fundamental Problems in Distributed Computing}
@@ -56,6 +65,7 @@
 \maketitle
 
 \input{introduction}
+\input{model}
 % We recommend abbrvnat bibliography style.
 
 \bibliographystyle{abbrvnat}

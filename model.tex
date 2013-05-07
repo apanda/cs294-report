@@ -1,0 +1,65 @@
+\section{Model}
+In this report we use the FLP model for asynchronous computations~\cite{fischer1985impossibility} augmented with the
+failure detector abstraction~\cite{chandra1996unreliable, chandra1996weakest}. The model consists of a set of $n$
+processes $\Pi = \{p_1, p_2, \ldots p_n\}$, and for most of the results assume $n \geq 3$. We assume a fail-stop model
+for failures, \ie processes do not recover from failures. Furthermore, for ease of exposition, a discrete global clock is assumed, the range of
+clock ticks is the set of natural numbers $\mathbb{N}$, and the processes do not have access to this clock.
+
+A failure pattern is a function from $\mathbb{N}$ to $2^{\Pi}$, where $F(\tau)$ denotes the set of processes that have
+crashed by time $\tau$. An environment $\mathcal{E}$ represents a set of failure patterns, and a problem is solvable
+under an environment $\mathcal{E}$ if it is solvable for all $F \in \mathcal{E}$. We denote by
+$\mathcal{E}_k$ the environment in which no more $k < n$ processes can fail. The environment $\mathcal{E}_{n - 1}$ (\ie
+the environment where all but one process can fail) is called the wait-free environment.
+
+A failure detector $\mathcal{D}$ is a distributed oracle accessible by each process, which provides the
+processes with additional information about the distributed environment. A failure detector has a range
+$\mathcal{R}_{\mathcal{D}}$ associated with it, representing the possible values returned by the detector. A
+failure detector history $H$, with range $\mathcal{R}_{\mathcal{D}}$ is a function mapping a process and a time to a value from the failure detector history,
+\ie $H : \Pi \times \mathbb{N} \rightarrow \mathcal{R}_{\mathcal{D}}$. A failure detector history represents the precise
+values returned by the failure detector at each process. A failure detector itself is a function mapping a failure
+pattern to a set of failure detector histories, \ie $\mathcal{D}: F \rightarrow \{H\}$. This definition captures the
+non-determinism that might be inherent to a failure detector, for instance a detector such as $\Omega$ can choose to
+return any correct process (the process returned might be different for runs with identical failure
+patterns).
+
+In this model an individual process is a state machine, which progress in distinct steps. At each step, a process
+receives a (maybe empty) message, queries the failure detector, sends zero or more messages to other processes, and
+changes its internal state. A step is therefore uniquely determined by the process ($p$), message ($m$), and failure
+detector reading ($d$). While the results are applicable to systems where steps are at a different granularity, the
+proofs presented use this definition of steps. Configuration ($\mathcal{C}$), schedules ($\mathcal{S}$), and
+applicability of a schedule have the same definitions as presented in class, and in the FLP model.
+
+In this model, the run for an algorithm $\mathcal{A}$ using a failure detector $\mathcal{D}$ is specified by a tuple $R
+= <F, H, I, S, T>$ where $F$ is a failure pattern, $H$ is a failure detector histroy with range
+$\mathcal{R}_{\mathcal{D}}$, $I$ is the set of initial states, $S$ is an infinite schedule, and $T$ is an infinite
+increase list of times indicating when each step in $S$ occurs. We assume that correct processes take infinitely many
+steps in $S$, $H$ is consistent with the failure pattern $F$, and a \emph{fail-stop} model for processes, \ie we assume
+processes take no steps after crashing.
+
+\subsection{Failure Detectors Used}
+The paper uses four failure detectors, which we list here, along with the properties they meet.
+\begin{itemize}
+\item \textbf{$\Omega$} or the eventually strong detector: $\Omega$ has range $\Pi$, and provides the
+following properties:
+\begin{itemize}
+\item \textbf{Eventual Completeness}: Eventually every correct node trusts some correct node.
+\item \textbf{Eventual Agreement}: Eventually no two correct nodes trust different correct nodes.
+\end{itemize}
+\item \textbf{$\Sigma$} or the Quorum failure detector: $\Sigma$ has range $2^{\Pi}$ (and returns a set of trusted
+processes)  and provides the following properties:
+\begin{itemize}
+\item \textbf{Intersection} Every two sets of trusted processes intersect, \ie $\Sigma(p_1, t_1) \cap \Sigma(p_2, t_2)
+\neq \emptyset \forall p_1, p_2 \in \Pi$ (it is possible that $p_1 = p_2$).
+\item \textbf{Strong Completeness} Eventually every trusted process is correct.
+\end{itemize}
+\item \textbf{$\mathcal{FS}$} or the Failure Signal Detector: $\mathcal{FS}$ has range $\{green, red\}$, and has the
+following properties:
+\begin{itemize}
+\item While no processes have crashed, $\mathcal{FS}$ outputs $green$.
+\item After one or more processes fail, eventually the output of $\mathcal{FS}$ at all processes is $red$.
+\end{itemize}
+\item \textbf{$\Psi$}: Initially $\Psi$ outputs the null value $\bot$. Eventually $\Psi$ can either behave as
+$(\Sigma, \Omega)$ (\ie output values for both failure detectors), or if at least one process has failed it
+can behave like $\mathcal{FS}$ (note, when behaving as $\mathcal{FS}$, $\Psi$ will eventually always output $red$).
+\end{itemize}
+

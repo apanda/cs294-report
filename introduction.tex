@@ -1,8 +1,32 @@
 \section{Introduction}
 The FLP result~\cite{fischer1985impossibility} showed the impossibility of achieving consensus in an asynchronous
 distributed system in the presence of even one failed process. Chandra, Hadzilacos and
-Toueg~\cite{chandra1996unreliable, chandra1996weakest} in a set of seminal papers showed that this impossibility could
-be circumvented using failure detectors, and furthermore that the leader failure detectore ($\Omega$) is the
+Toueg (CHT)~\cite{chandra1996unreliable, chandra1996weakest} in a set of seminal papers showed that this impossibility could
+be circumvented using failure detectors, and furthermore that the eventually strong detector ($\Omega$) is the
 weakest failure detector required for solving consensus in a distributed system where a majority of processes are
 correct. In ``The Weakest Failure Detectors to Solve Certain Fundamental Problems in Distributed
-Computing''~\cite{delporte2004weakest}, Delport-Gallet et al 
+Computing''~\cite{delporte2004weakest}, Delport-Gallet et al. determine the weakest failure detectors required to build
+atomic registers, solve consensus, and solve non-blocking atomic commit in any environment, \ie with any number of
+failed processes.
+
+Non-blocking atomic commit (NBAC) is a widely studied distributed systems primitive that can be used for transaction
+processing in databases~\cite{gray1978notes}. Informally, processeses pariticipating in NBAC start off by proposing a
+binary YES (the process can commit a transaction) or NO (the process cannot commit a transaction) value, and eventually
+all processes must decide between commiting the transaction (\ie YES), or aborting (\ie NO). A decision to commit
+requires that all processes have voted YES, while the algorithm can decide to abort either because one or more of the
+processes voted NO, or a failure was detected. Furthermore, to eliminate some vacuous solutions, in the absense of
+failures, if all processes vote YES, the final decisions must be to commit. NBAC is provably harder than consensus,
+Guerraoui~\cite{guerraoui1995revisiting} showed that  NBAC
+cannot be solved in an aynchronous distributed system with a single failure, even when an unreliable failure detector is
+used. While prior work~\cite{guerraoui2002weakest} had looked at failure detectors needed to solve NBAC in some specific
+environments, it was unknown if there was a weakest failure detector to solve NBAC in any environment.
+
+Consensus is similarly an important, and widely studied distributed systems primitive. While the CHT result requires
+that a majority of processes be correct, a result from Lo et al.~\cite{lo1994using} shows that in a shared-memory system
+$\Omega$ can be used to solve consensus in all environments. This paper bridges the gap between these results,
+and determines the weakest failure detector to solve consensus in all environments in a message-passing system.
+
+\textbf{Outline} In this paper we use the same model for asynchronous distributed systems with failure detectors used
+by~\cite{chandra1996unreliable, chandra1996weakest}. We start by reiterating the main points of that model, before
+delving into the actual results, proofs, and possible future work.
+

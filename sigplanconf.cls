@@ -200,7 +200,7 @@
 
 \@setflag \@authoryear = \@false
 \@setflag \@blockstyle = \@false
-\@setflag \@copyrightwanted = \@true
+\@setflag \@copyrightwanted = \@false
 \@setflag \@explicitsize = \@false
 \@setflag \@mathtime = \@false
 \@setflag \@natbib = \@true
