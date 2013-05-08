@@ -10,14 +10,14 @@ atomic registers, solve consensus, and solve non-blocking atomic commit in any e
 failed processes.
 
 Non-blocking atomic commit (NBAC) is a widely studied distributed systems primitive that can be used for transaction
-processing in databases~\cite{gray1978notes}. Informally, processeses pariticipating in NBAC start off by proposing a
+processing in databases~\cite{gray1978notes}. Informally, processes participating in NBAC start off by proposing a
 binary YES (the process can commit a transaction) or NO (the process cannot commit a transaction) value, and eventually
-all processes must decide between commiting the transaction (\ie YES), or aborting (\ie NO). A decision to commit
+all processes must decide between committing the transaction (\ie YES), or aborting (\ie NO). A decision to commit
 requires that all processes have voted YES, while the algorithm can decide to abort either because one or more of the
-processes voted NO, or a failure was detected. Furthermore, to eliminate some vacuous solutions, in the absense of
+processes voted NO, or a failure was detected. Furthermore, to eliminate some vacuous solutions, in the absence of
 failures, if all processes vote YES, the final decisions must be to commit. NBAC is provably harder than consensus,
 Guerraoui~\cite{guerraoui1995revisiting} showed that  NBAC
-cannot be solved in an aynchronous distributed system with a single failure, even when an unreliable failure detector is
+cannot be solved in an asynchronous distributed system with a single failure, even when an unreliable failure detector is
 used. While prior work~\cite{guerraoui2002weakest} had looked at failure detectors needed to solve NBAC in some specific
 environments, it was unknown if there was a weakest failure detector to solve NBAC in any environment.
 

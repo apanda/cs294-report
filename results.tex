@@ -5,10 +5,10 @@ results, which build on previous results. The results, and their relations are a
 \begin{itemize}
 \item The paper shows that $\Sigma$ is the weakest failure detector required to build atomic (linearizable) registers.
 \item The previous result is combined with the result from \cite{lo1994using}, and CHT~\cite{chandra1996weakest} to show
-that $(\Sigma, \Omega)$ is the weakes failure detector required to solve consensus in all environments.
+that $(\Sigma, \Omega)$ is the weakest failure detector required to solve consensus in all environments.
 \item A weakened version of consensus, Quittable Consensus (QC) is then presented, and it is shown that $\Psi$ is the weakest
 failure detector for solving Quittable Consensus.
-\item Lastly, the  authors show that one can solve NBAC by agumenting any Quittable Consensus algorithm with the
+\item Lastly, the  authors show that one can solve NBAC by augmenting any Quittable Consensus algorithm with the
 $\mathcal{FS}$ failure detector, and prove that $(\Psi, \mathcal{FS})$ is the weakest failure detector required to solve
 NBAC.
 \end{itemize}
@@ -31,4 +31,4 @@ quorum at least one of the members must have witnessed the last write, and is th
 value written. $\Sigma$ (the quorum failure detector) provides algorithms with a set of trusted processes, for which
 intersection is guaranteed, without requiring that a node contact a majority. By moving the intersection requirement
 into the  failure detector, $\Sigma$ provides enough information to allow all reads and writes to share at least one
-common node, and therefore prvide the guarantees required by atomic registers. 
+common node, and therefore provide the guarantees required by atomic registers. 
