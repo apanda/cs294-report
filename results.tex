@@ -1,0 +1,34 @@
+\section{Results}
+\subsection{Outline of Results}
+In this section we describe the main results from the paper. The results are themselves presented as four independent
+results, which build on previous results. The results, and their relations are as listed below:
+\begin{itemize}
+\item The paper shows that $\Sigma$ is the weakest failure detector required to build atomic (linearizable) registers.
+\item The previous result is combined with the result from \cite{lo1994using}, and CHT~\cite{chandra1996weakest} to show
+that $(\Sigma, \Omega)$ is the weakes failure detector required to solve consensus in all environments.
+\item A weakened version of consensus, Quittable Consensus (QC) is then presented, and it is shown that $\Psi$ is the weakest
+failure detector for solving Quittable Consensus.
+\item Lastly, the  authors show that one can solve NBAC by agumenting any Quittable Consensus algorithm with the
+$\mathcal{FS}$ failure detector, and prove that $(\Psi, \mathcal{FS})$ is the weakest failure detector required to solve
+NBAC.
+\end{itemize}
+
+\subsection{The Weakest Failure Detector for Atomic Registers}
+\textbf{Result 1} $\Sigma$ (the quorum failure detector) is the weakest failure detector for implementing atomic
+registers.
+\textbf{Proof:} We present some of the arguments leading to this result in both directions below.
+
+\textbf{$\Sigma \implies$ Atomic Registers:} We know from Chapter 4 of~\cite{cachin2011introduction}
+and~\cite{vitanyi1986atomic} that a single-writer, single-reader atomic register (henceforth a $(1,1)$-atomic register)
+can be converted to a multi-writer, multi-reader atomic register (henceforth a $(N, N)$-atomic register). We therefore
+focus on producing a $(1, 1)$ atomic register using $\Sigma$. 
+
+Quorums (majority voting) can be used to build atomic registers (particularly $(1, 1)$-atomic registers, where the
+reader must merely keep track of the last value returned to guarantee linearizability). These implementations exploit
+the intersection property offered by quorums, \ie every quorum (majority) must intersect with every other quorum. Since
+all writes, and reads go to, and are acknowledged by a quorum, the algorithm is guaranteed that when reading from a
+quorum at least one of the members must have witnessed the last write, and is therefore guaranteed to read the last
+value written. $\Sigma$ (the quorum failure detector) provides algorithms with a set of trusted processes, for which
+intersection is guaranteed, without requiring that a node contact a majority. By moving the intersection requirement
+into the  failure detector, $\Sigma$ provides enough information to allow all reads and writes to share at least one
+common node, and therefore prvide the guarantees required by atomic registers. 
