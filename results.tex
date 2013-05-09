@@ -275,7 +275,7 @@ that any NBAC implementation can be used to implement $(\Psi, \mathcal{FS})$.
 \LineComment{Run at all processes}
 \Procedure{FS}{f}
     \State $Out \gets Green$ \Comment{$Out$ contains the output of $\mathcal{FS}$}
-    \While{$Out = GREEN$} \Comment{Run forever}
+    \While{$Out = GREEN$}
         \State $result \gets NBAC.Vote(Yes)$
         \If $result = Abort$
             \State $Out \gets RED$
