@@ -20,7 +20,7 @@
 %-----------------------------------------------------------------------------
 
 
-\documentclass[preprint,11pt,times]{sigplanconf}
+\documentclass[preprint,11pt, times]{sigplanconf}
 
 % The following \documentclass options may be useful:
 %
@@ -28,7 +28,9 @@
 % 11pt          To set in 11-point type instead of 9-point.
 % authoryear    To obtain author/year citation style instead of numeric.
 
+\usepackage{amsmath}
 \usepackage{times}
+\usepackage{algorithm, algpseudocode, float}
 \usepackage{xcolor}
 \usepackage{xspace}
 \usepackage{outlines}
@@ -43,7 +45,6 @@
     urlcolor=MyDarkBlue
 }
 %\usepackage[sort]{cite}
-\usepackage{amsmath}
 \usepackage{amsfonts}
 
 \newcommand{\eat}[1]{}
@@ -54,6 +55,9 @@
 \newcommand{\etc}{{\it etc. }}
 \newcommand{\viz}{{\it viz. }}
 \newcommand{\apriori}{{\it a priori}}
+\algblockdefx{Upon}{EndUpon}[2]{\textbf{upon receive} #1 from #2}{\ }
+\algnewcommand{\LineComment}[1]{\State \(\triangleright\) #1}
+\newfloat{algorithm}{t}{lop}
 \sloppy
 \begin{document}
 
@@ -67,6 +71,8 @@
 \input{introduction}
 \input{model}
 \input{results}
+\input{disadvantages}
+\input{future}
 % We recommend abbrvnat bibliography style.
 
 \bibliographystyle{abbrvnat}

@@ -58,8 +58,9 @@ following properties:
 \item While no processes have crashed, $\mathcal{FS}$ outputs $green$.
 \item After one or more processes fail, eventually the output of $\mathcal{FS}$ at all processes is $red$.
 \end{itemize}
-\item \textbf{$\Psi$}: Initially $\Psi$ outputs the null value $\bot$. Eventually $\Psi$ can either behave as
-$(\Sigma, \Omega)$ (\ie output values for both failure detectors), or if at least one process has failed it
-can behave like $\mathcal{FS}$ (note, when behaving as $\mathcal{FS}$, $\Psi$ will eventually always output $red$).
+\item \textbf{$\Psi$}: Initially $\Psi$ outputs the null value $\bot$. Eventually $\Psi$ transitions to a state where it
+either behave as $(\Sigma, \Omega)$ at \emph{all processes} for the rest of the execution(\ie output values for both failure detectors),
+or in cases where at least one process has failed it can behave like $\mathcal{FS}$ at \emph{all processes} for the rest
+of the execution (note, when behaving as $\mathcal{FS}$, $\Psi$ will eventually always output $red$).
 \end{itemize}
 

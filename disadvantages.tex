@@ -1,0 +1,9 @@
+\section{Disadvantages}
+The primary disadvantage of most of this work is that it is not clear which of the failure detectors can be implemented
+in practice. For instance, for any environment where all but one process can fail, all processes trusted by $\Sigma$
+must include the process that does not fail. This can be a pretty strong requirement to meet, and it is not clear how
+one meets this requirement in practice. 
+
+Similarly the $\mathcal{FS}$ failure detector requires that a process never be wrongly suspected (since transitions from
+$RED$ to $GREEN$ are not permitted). In this case, since some of the original motivation for this work was based on
+practicality, it seems unclear that one could actually use the results in a practical manner.

@@ -21,14 +21,298 @@ registers.
 \textbf{$\Sigma \implies$ Atomic Registers:} We know from Chapter 4 of~\cite{cachin2011introduction}
 and~\cite{vitanyi1986atomic} that a single-writer, single-reader atomic register (henceforth a $(1,1)$-atomic register)
 can be converted to a multi-writer, multi-reader atomic register (henceforth a $(N, N)$-atomic register). We therefore
-focus on producing a $(1, 1)$ atomic register using $\Sigma$. 
+focus on implementing $(1, 1)$-atomic registers using $\Sigma$. $(1, 1)$-atomic registers provide the following properties:
+\begin{itemize}
+\item \textbf{Termination}: If a node is correct, each read and write operation eventually completes.
+\item \textbf{Validity}: A read that is not concurrent with a write returns the last value written. In case of a
+concurrent write, a read can return either the last value written, or the value of the concurrent write. 
+\item \textbf{Ordering}: If read $r_1$ precedes read $r_2$, then $write(r_1) \leq write(r_2)$ (\ie the write for $r_2$
+cannot precede the write for $r_1$.
+\end{itemize}
 
-Quorums (majority voting) can be used to build atomic registers (particularly $(1, 1)$-atomic registers, where the
-reader must merely keep track of the last value returned to guarantee linearizability). These implementations exploit
-the intersection property offered by quorums, \ie every quorum (majority) must intersect with every other quorum. Since
-all writes, and reads go to, and are acknowledged by a quorum, the algorithm is guaranteed that when reading from a
-quorum at least one of the members must have witnessed the last write, and is therefore guaranteed to read the last
-value written. $\Sigma$ (the quorum failure detector) provides algorithms with a set of trusted processes, for which
-intersection is guaranteed, without requiring that a node contact a majority. By moving the intersection requirement
-into the  failure detector, $\Sigma$ provides enough information to allow all reads and writes to share at least one
-common node, and therefore provide the guarantees required by atomic registers. 
+Quorums (accessing a majority) can be used to build $(1, 1)$-atomic registers. The crucial property provided by quorums is
+one of intersection, \ie any two quorums must intersect. For this result, we observe that processes trusted by $\Sigma$
+exhibit the same intersection property and make use of this observation. The algorithm is listed in
+Algorithm~\ref{alg:swsr}.
+Briefly we discuss why all the required conditions are satisfied by this algorithm:
+\begin{itemize}
+\item \textbf{Termination} Since $\Sigma$ eventually only trusts correct processes, both the read and write must
+eventually receive messages from all trusted processes, thus guaranteeing termination.
+\item \textbf{Validity} By the intersection property of $\Sigma$, the set of processes acknowledging a write, must
+intersect with the set of processes participating in a read. Since the read function picks the highest sequence number
+returned, it will always return the last written value, or a value being written concurrently.
+\item \textbf{Ordering} The update in line 28 and 29 ensure the ordering property is met.
+\end{itemize}
+
+\begin{algorithm}
+\caption{Algorithm for $\Sigma \implies$ atomic register}
+\label{alg:swsr}
+\begin{algorithmic}[1]
+\Procedure{Initialize}{ }
+    \LineComment{Run at all processes}
+    \State $current \gets \bot$
+    \State $seq \gets -1$
+    \Upon{$(WRITE, y, s)$}{the writer}
+        \If $s > seq$
+           \State $current \gets y$
+           \State $seq \gets s$
+           \State send(WACK) to writer
+        \EndIf
+    \EndUpon
+    \Upon{$(READ)$}{the reader}
+        \State send((RACK, seq, current)) to reader
+    \EndUpon
+\EndProcedure
+\Procedure {write}{$x$}
+\LineComment{Run at writer}
+    \State $current \gets x$
+    \State $seq \gets seqs + 1$
+    \State send(WRITE, current, seq)
+    \State wait until recv WACK from all processes trusted by $\Sigma$
+\EndProcedure
+\Procedure {read}{ }
+    \State send(READ) to all
+    \State wait until receive (RACK, s, current) from all processes trusted by $\Sigma$
+    \State $a \gets max\{v | (RACK, s, *)$ is a receive message $\}$
+    \If{$a > seq$}
+        \State $seq \gets a$
+        \State $current \gets v$ such that $(RACK, a, v)$ received
+    \EndIf
+    \State return current
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\textbf{Atomic Registers $\implies \Sigma$}
+This is a significantly more involved result, so we only go over a few of the lemmas used to prove this part of the
+result, and a brief sketch of the proof. The full proof is presented in~\cite{delporte2003shared}.  Overall, we need to find an algorithm to emulate $\Sigma$ using atomic
+registers. For this algorithm we assume the use of $n$ (the number of processes) single-writer, multiple-reader
+registers. Each process is assigned a register, we denote the registers assigned to process $p_i$ as $reg_i$.
+The algorithm proceeds as following:
+\begin{itemize}
+\item All processes repeatedly write a value described later to their registers. All processes participating
+in a write are tagged (\ie any processes that send or receive messages related to writes are tracked and the writer
+learns of these processes). Associate with each write $k$ to register $reg_i$, a value $P_i(k)$, the set of all
+processes (including the writer) that participated in a write. Assume $P_i(0) = \Pi$ (the first write is $k = 1$). For the points below
+consider the $k^{th}$ write to $reg_i$.
+\item The value written to register $reg_i$  during the $k^{th}$ write is the list $\{P_i(0), P_i(1), \ldots P_i(k -
+1)\}$, \ie the list of all sets of processes that have participated in a write.
+\item Each process reads all $n$ registers, and waits to hear from at least one process in each $P_j(t)$ where $p_j \in
+\Pi$, and $P_j(t)$ has already been written to $reg_j$ (\ie a process sends messages and waits from acknowledgement from
+at least one process in each set of processes that participated in a write). Let's represent by $O_i(k)$ the set of
+processes from which $p_i$ hears back. The process returns the union of $P_i(k) \cup O_i(k)$ as the output of $\Sigma$,
+\ie it returns the union of all processes that participated in the writing of the register, and at least one process
+from processes that previously participated in any write to any register.
+\end{itemize}
+
+Keeping the above description in mind we need to show that the following properties are met:
+\begin{itemize}
+\item \textbf{Strong Completeness} Eventually only correct processes are trusted. 
+\item \textbf{Intersection} Any two sets of values returned by the algorithm above has a non-empty intersection.
+\end{itemize}
+
+\textbf{Strong Completeness} First we look at strong completeness. Observe that at each step all the nodes trusted by the
+previous algorithm have either participated in a write, or acknowledge a message from the process. Since we assume a
+fail-stop model, failed processes must eventually neither send nor receive any messages, and hence assuming that the
+output is continuously updated, eventually all trusted processes must be correct. For strong completeness we must
+therefore only prove that the output is continuously updated. From the previous description, this requires that at least
+one process that participates in any writes to a register must be correct for the entire execution.
+
+\textbf{Lemma 1} At least one correct process (\ie a process that does not fail during the entire execution) must
+participate in each write to a register.
+
+\textbf{Proof} Assume this is not true. Then partition all the processes that participate in a write from the rest of
+the processes, and allow no messages to pass between partitions. In this case the state of the distributed system where
+all processes participating in a write fail before the write begins is indistinguishable from one where they fail after
+the write succeeds (since no messages cross the partition). Now consider a process that did not participate in the write
+that reads from the register after the write has ended. While, from the state observable by this process,  the distributed 
+system is identical in both the case where the write never takes place, and the case where the write occurs, the value
+read from the register differ. This is a contradiction, and therefore at least one correct process must have
+participated in the write to the register.
+
+From Lemma 1, we know that at least one of the processes in each set $P_i(t)$ is correct for the duration of the
+execution, and therefore must eventually acknowledge messages. Therefore, the value returned by the algorithm satisfy
+strong completeness.
+
+\textbf{Intersection} Since the value returned by the algorithm has at least one process that has participated in all
+previous register writes (and hence was the result of $\Sigma(p, t)$ for some process $p$ and time $t$), the
+intersection property is trivially satisfied.
+
+Since $\Sigma$ can be used to implement atomic registers, and atomic registers (and hence any failure detector that can
+be used to implement them) can be used to implement $\Sigma$, we find that $\Sigma$ is the weakest failure detector for
+building atomic registers.
+
+\subsection{The Weakest Failure Detector to Solve Consensus} 
+\textbf{Result 2} $(\Sigma, \Omega)$ is the weakest failure detector to solve consensus in any environment (\ie with any
+number of failing processes).
+
+\textbf{Proof}\\
+\textbf{$(\Sigma, \Omega) \implies$ consensus} From the previous result we know that $\Sigma$ is the weakest failure
+detector to implement atomic registers. The result from~\cite{lo1994using} shows that one can implement consensus using
+shared registers and $\Omega$ in any environment. The algorithm proposed in that paper relies on $n$ $(1,N)$-atomic
+registers (one per-process), and is very similar to Hierarchical Consensus with two modifications: a) Instead of using
+best-effort broadcast, nodes record their decisions in the registers, and b) nodes change rounds either when the
+register for the coordinator has changed, or the coordinator is suspected by the failure detector. Since the algorithm
+assumes that the atomic registers themselves are fault tolerant, and can be read even after the writing processes have
+died, this modified hierarchical consensus can be run with $\Omega$ and achieve consensus even in environments where all
+but one of the processes fail.
+
+\textbf{Consensus $\implies (\Sigma, \Omega)$} This result is presented in two parts:
+\begin{itemize}
+\item \textbf{Consensus $\implies \Omega$} The valence proof from CHT~\cite{chandra1996weakest} shows that one can
+extract $\Omega$ from any implementation of the consensus algorithm. We therefore know that given consensus one can
+implement $\Omega$, and therefore any failure detector which can be used to implement consensus is reducible to
+$\Omega$.
+\item \textbf{Consensus $\implies \Sigma$} Consensus can be used to implement atomic registers (since consensus can be
+used to decide on the ordering of writes, etc). We have shown above that one can use atomic registers to implement
+$\Sigma$. The combination of these two statements means that one can reduce any failure detector that can be used to
+solve consensus to $\Sigma$.
+\end{itemize}
+As an aside, the previous result indicates that for environments where $\Omega$ is sufficient to implement consensus
+(\ie environments where at least a majority of the processes are correct), $\Omega$ is reducible to $\Sigma$. Other
+results in~\cite{delporte2003shared} show that a) for $2$ processes, $\Sigma$ and $\Omega$ are equivalent. Furthermore
+in an environment, with $3$ or more processes $(\Sigma, \Omega)$ is strictly stronger than $\Sigma$, and is stronger
+than $\Omega$ in all environments where more than a majority of processes can fail.
+
+\subsection{The Weakest Failure Detector to Solve Quittable Consensus}
+Quittable Consensus (QC) is a weakened form of consensus, where in addition to a proposed value, all processes can decide on
+a special value $QUIT$ indicating that one or more failures was detected. We specifically focus on binary uniform
+consensus here, in which case the values that can be decided upon are one of $\{0, 1, QUIT\}$. An algorithm for binary,
+uniform Quittable Consensus must exhibit the following three properties:
+\begin{itemize}
+\item \textbf{Termination} If every correct process proposes a value, then every cor rec process eventual decides.
+\item \textbf{Uniform Agreement} No two processes decide on different values.
+\item \textbf{Validity} A process may only decide a value $v\in \{0, 1, QUIT\}$. Furthermore:
+\begin{itemize}
+\item If $v\in {0, 1}$ then some process previously proposed $v$.
+\item If $v = QUIT$ then a failure previously occurred.
+\end{itemize}
+\end{itemize}
+\textbf{Result 3} $\Psi$ is the weakest failure detector for solving Quittable Consensus.
+
+\textbf{Proof}
+
+\textbf{$\Psi \implies$ QC} This follows from the observation that $\Psi$ eventually either returns $RED$ indicating
+that a failure has cured, or returns values from the range of $(\Sigma, \Omega)$. The algorithm then works as follows:
+\begin{itemize}
+\item Each process waits until $\Psi$ returns something other than $\bot$.
+\item If $\Psi$ returns something with range $\{RED, GREEN\}$, we know by definition a failure must have been detected.
+The process therefore decides $QUIT$ (since $\Psi$ presents the same behavior at all processes, we know that every other
+process must also decide $QUIT$ thus meeting the Uniform Agreement condition).
+\item If $\Psi$ behaves like $(\Sigma, \Omega)$ (which it will do at all processes, for the rest of the execution), use
+the algorithm from result $2$ to implement consensus.
+\end{itemize}
+
+\textbf{QC $\implies \Psi$} This result relies on a proof similar to CHT~\cite{chandra1996weakest}. The algorithm relies
+on building increasingly longer DAGs of failure detector readings from various processes at various times. It then
+builds a simulation forest by simulating runs of the QC algorithm with different initial proposals. If the simulation in
+any of the DAGs decide $QUIT$, the algorithm simulates runs a round of QC with the proposal $0$. On the other hand if
+this is not the case, the algorithm runs a round of QC and proposes a value that encodes in it two initial conditions
+which differ in exactly one node and schedules that result in the processes deciding different values. Using this
+information, the algorithm can extract the critical index like in CHT to generate $\Omega$, and can also simulate
+$\Sigma$. The full proof is presented in~\cite{guerraoui2002weakest}.
+
+\subsection{The Weakest Failure Detector to Solve NBAC}
+\textbf{Result 4} For all environments $(\Psi, \mathcal{FS})$ is the weakest failure detector to implement NBAC. 
+
+\textbf{Proof}\\
+\textbf{$(\Psi, \mathcal{FS}) \implies$ NBAC} We have shown above that $\Psi$ is the weakest failure detector required
+to implement QC. In Algorithm~\ref{alg:qctonbac} we provide an algorithm for implementing NBAC using $QC$ and the
+$\mathcal{FS}$ failure detector.
+
+\begin{algorithm}
+\caption{Algorithm for QC + $\mathcal{FS} \implies$ NBAC}
+\label{alg:qctonbac}
+\begin{algorithmic}[1]
+\LineComment{Run at all processes}
+\Procedure{Vote}{$v$}\Comment{$v \in \{Yes, No\}$}
+    \State send v to all processes
+    \State wait until receiving vote from each process or $\mathcal{FS} = RED$
+    \If all processes vote yes
+        \State $myproposal \gets 1$
+    \Else \Comment{Some process voted no, or a failure was detected}
+        \State $myproposal \gets 0$
+    \EndIf
+    \State $decision \gets QC(myproposal)$
+    \If $decision = 1$
+        \State return Commit
+    \Else \Comment{$decision \in \{0, QUIT\}$}
+        \State return Abort
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+We now show that Algorithm~\ref{alg:qctonback} meets all the requirements for NBAC:
+\begin{itemize}
+\item \textbf{Termination} If every correct process votes, then every correct process eventually returns a value.
+
+This is true from the fact that the process waits until either votes from all processes are received, or the failure
+detector indicates a failure. In either case, the algorithm must eventually make progress.
+
+\item \textbf{Uniform Agreement} No two processes (whether correct or faulty) return different values.
+
+True from the properties of $QC$, and how the algorithm decides.
+
+\item \textbf{Validity} A process may only return Commit or Abort. Furthermore if the process returns $Commit$ then all
+processes previously voted $Yes$. If the process returns $Abort$ either some process previously voted $no$ or a failure
+previously occurred.
+\end{itemize}
+
+The algorithm only returns $Commit$ or $Abort$. If a process proposes $1$ it has seen a vote of $Yes$ from every other
+process, implying every process has voted $1$. Therefore if the processes return $Commit$, at least one process
+observed a $Yes$ vote from every process in the system. To propose $0$ either one of the processes voted $No$, or a
+failure was detected, and hence in cases where no process votes $No$, and no process is faulty $0$ is never proposed. By
+validity of QC, if QC returns $0$ or Quit, either: a) a process voted $No$, or b) a process failed.
+
+\textbf{NBAC $\implies (\Psi, \mathcal{FS})$} Here we show algorithms for using NBAC to implement $\mathcal{FS}$ and quittable
+consensus. Since from Result 3 any algorithm for Quittable Consensus can be used to implement $\Psi$, this result shows
+that any NBAC implementation can be used to implement $(\Psi, \mathcal{FS})$.
+
+\begin{algorithm}
+\caption{Algorithm for NBAC $\implies \mathcal{FS}$}
+\label{alg:nbactofs}
+\begin{algorithmic}[1]
+\LineComment{Run at all processes}
+\Procedure{FS}{f}
+    \State $Out \gets Green$ \Comment{$Out$ contains the output of $\mathcal{FS}$}
+    \While{$Out = GREEN$} \Comment{Run forever}
+        \State $result \gets NBAC.Vote(Yes)$
+        \If $result = Abort$
+            \State $Out \gets RED$
+        \EndIf
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Algorithm for NBAC $\implies$ QC}
+\label{alg:nbactoqc}
+\begin{algorithmic}[1]
+\LineComment{Run at all processes}
+\Procedure{Propose}{$v$}\Comment{$v\in \{0, 1\}$}
+    \State send v to all processes
+    \State $d \gets NBAC.Vote(Yes)$
+    \If $d = Abort$
+        \State return Quit
+    \Else
+        \State wait until receiving proposal from each process
+        \State return smallest proposal received
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Algorithm~\ref{alg:nbactofs} shows an algorithm that implements $\mathcal{FS}$ using NBAC. Since each process always
+votes $Yes$, the only case in which the NBAC algorithm returns $Abort$ is when a process fails. At this point the output
+changes to $RED$ and stays $RED$. By the Termination property of NBAC we know that while $Out$ is $GREEN$, the
+variable $Out$ is going to be eventually updated, and hence this algorithm satisfies the requirements for the
+$\mathcal{FS}$ failure detector.
+
+Algorithm~\ref{alg:nbactoqc} presents an algorithm to convert NBAC to QC. We assume the use of reliable links, and
+hence if a process votes $YES$, we are guaranteed to receive a proposal from that process. We therefore meet the
+Termination requirement for QC, since eventually either the NBAC module aborts (by the NBAC termination condition) or we
+receive a vote from everyone. Since we pick the smallest received vote, and everyone waits for all votes to appear, we
+trivially meet the Uniform Agreement property. By a similar argument this algorithm also meets the Validity conditions.
+
+We have therefore shown that $(\Psi, \mathcal{FS})$ is the weakest failure detector required to solve NBAC.

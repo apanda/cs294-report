@@ -1,0 +1,16 @@
+\section{Future Work}
+The biggest piece of future work this work seems to indicate the necessity for is some broader categorization of failure
+detectors. The result from Chandra and Toueg~\cite{chandra1996unreliable} introduced $8$ failure detectors, and showed
+equivalence and a hierarchy between them. However results from~\cite{delporte2003shared} and others show that, for
+instance, $\Sigma$ does not cleanly fit into this hierarchy, in particular it is incomparable to $\Omega$ in a general
+environment. While all four of the failure detectors used in this paper are strictly weaker than the perfect failure
+detector $P$ described by Chandra and Toueg, a richer taxonomy seems to be required.
+
+Secondly, the gap between message passing systems and systems using shared memory that is used to find the weakest
+failure detector for Consensus seems quite interesting. In a practical sense, once could perhaps use this to split
+systems into components with differing reliability requirements. For instance, maybe one could use a database or other
+system running in a datacenter as a source for atomic registers, which are used by smaller devices (somewhat like sensor
+networks) in the field. Since it is much harder to provide reliability guarantees for the later, by chaining devices in
+this manner one could build a practical system where some reliability is easier to achieve for some fraction of
+processors. This seems particularly interesting in cases where it is not generally possible to guarantee that only a
+minority of processors fail.
